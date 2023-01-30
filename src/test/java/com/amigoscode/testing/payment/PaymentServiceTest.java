@@ -85,7 +85,7 @@ class PaymentServiceTest {
     }
 
     @Test
-    void itShouldThrowWhenCardIsNotCharges() {
+    void itShouldThrowWhenCardIsNotCharged() {
         // Given
         UUID customerId = UUID.randomUUID();
 
@@ -104,7 +104,7 @@ class PaymentServiceTest {
                 )
         );
 
-        // ... Card is charged successfully
+        // ... Card is not charged successfully
         given(cardPaymentCharger.chargeCard(
                 paymentRequest.getPayment().getSource(),
                 paymentRequest.getPayment().getAmount(),
@@ -134,25 +134,39 @@ class PaymentServiceTest {
                         null,
                         null,
                         new BigDecimal("100.00"),
-                        Currency.USD,
+                        Currency.EUR,
                         "card123xx",
                         "Donation"
                 )
         );
+        // When
+        assertThatThrownBy(() -> underTest.chargeCard(customerId, paymentRequest))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining(
+                        String.format("Currency [%s] not supported", paymentRequest.getPayment().getCurrency())
+                );
 
-        // ... Card is charged successfully
-        given(cardPaymentCharger.chargeCard(
-                paymentRequest.getPayment().getSource(),
-                paymentRequest.getPayment().getAmount(),
-                paymentRequest.getPayment().getCurrency(),
-                paymentRequest.getPayment().getDescription()
-        )).willReturn(new CardPaymentCharge(false));
+
+        // Then
+        // ... No interaction with cardPaymentCharger
+        then(cardPaymentCharger).shouldHaveNoInteractions();
+
+        // Payment should not be saved
+        then(paymentRepository).shouldHaveNoInteractions();
+    }
+
+    @Test
+    void itShouldNotChargeAndThrowWhenCustomerNotFound() {
+        // Given
+        UUID customerId = UUID.randomUUID();
+
+        // Customer not found in db
+        given(customerRepository.findById(customerId)).willReturn(Optional.empty());
 
         // When
         // Then
-        assertThatThrownBy(() -> underTest.chargeCard(customerId, paymentRequest))
+        assertThatThrownBy(() -> underTest.chargeCard(customerId, new PaymentRequest(new Payment())))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining(String.format("Card not debited for customer %s", customerId));
-        then(paymentRepository).should(never()).save(any(Payment.class));
+                .hasMessageContaining(String.format("Customer with [%s] id not found", customerId));
     }
 }
