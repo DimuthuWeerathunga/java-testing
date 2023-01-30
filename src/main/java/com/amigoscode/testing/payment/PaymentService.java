@@ -49,7 +49,7 @@ public class PaymentService {
         );
 
         // 4. If not debited throw
-        if (cardPaymentCharge.isCardDebited()) {
+        if (!cardPaymentCharge.isCardDebited()) {
             throw new IllegalStateException(String.format("Card not debited for customer %s", customerId));
         }
 
