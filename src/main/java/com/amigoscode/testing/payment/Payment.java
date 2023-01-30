@@ -1,10 +1,16 @@
 package com.amigoscode.testing.payment;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+@Entity
 public class Payment {
 
+    @Id
+    @GeneratedValue
     private Long paymentId;
 
     private UUID customerId;
