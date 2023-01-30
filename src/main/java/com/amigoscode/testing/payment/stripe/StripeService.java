@@ -15,9 +15,15 @@ import java.util.Map;
 @Service
 public class StripeService implements CardPaymentCharger {
 
+    private final StripeApi stripeApi;
+
     private static final RequestOptions requestOptions = RequestOptions.builder()
             .setApiKey("sk_test_4eC39HqLyjWDarjtT1zdp7dc")
             .build();
+
+    public StripeService(StripeApi stripeApi) {
+        this.stripeApi = stripeApi;
+    }
 
     @Override
     public CardPaymentCharge chargeCard(
@@ -34,7 +40,7 @@ public class StripeService implements CardPaymentCharger {
         params.put("description", description);
 
         try {
-            Charge charge = Charge.create(params, requestOptions);
+            Charge charge = stripeApi.create(params, requestOptions);
             return new CardPaymentCharge(charge.getPaid());
         } catch (StripeException e) {
             throw new IllegalStateException("Cannot make stripe charge", e);
