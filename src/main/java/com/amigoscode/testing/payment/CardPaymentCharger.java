@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 public interface CardPaymentCharger {
 
-    CardPaymentCHarge chargeCard(
+    CardPaymentCharge chargeCard(
             String cardSource,
             BigDecimal amount,
             Currency currency,
