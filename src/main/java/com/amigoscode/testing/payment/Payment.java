@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Entity
-public class Payment {
+public class   Payment {
 
     @Id
     @GeneratedValue

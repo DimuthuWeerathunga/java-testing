@@ -25,16 +25,39 @@ public class PaymentService {
         this.cardPaymentCharger = cardPaymentCharger;
     }
 
-    void chargeCard(UUID customerId, PaymentRequest paymentRequest){
+    void chargeCard(UUID customerId, PaymentRequest paymentRequest) {
         // 1. Does customer exist if not throw
         boolean isCustomerFound = customerRepository.findById(customerId).isPresent();
-        if(!isCustomerFound){
+        if (!isCustomerFound) {
             throw new IllegalStateException(String.format("Customer with [%s] id not found", customerId));
         }
 
         // 2. Do we support the currency if not throw
-        ACCEPTED_CURRENCIES.stream()
-                .anyMatch(c -> c.equals(paymentRequest.))
+        boolean isCurrencySupported = ACCEPTED_CURRENCIES.stream()
+                .anyMatch(c -> c.equals(paymentRequest.getPayment().getCurrency()));
+        if (!isCurrencySupported) {
+            String message = String.format("Currency [%s] not supported", paymentRequest.getPayment().getCurrency());
+            throw new IllegalStateException(message);
+        }
 
+        // 3. Card charge
+        CardPaymentCharge cardPaymentCharge = cardPaymentCharger.chargeCard(
+                paymentRequest.getPayment().getSource(),
+                paymentRequest.getPayment().getAmount(),
+                paymentRequest.getPayment().getCurrency(),
+                paymentRequest.getPayment().getDescription()
+        );
+
+        // 4. If not debited throw
+        if (cardPaymentCharge.isCardDebited()) {
+            throw new IllegalStateException(String.format("Card not debited for customer %s", customerId));
+        }
+
+        // 5. Insert payment
+        paymentRequest.getPayment().setCustomerId(customerId);
+
+        paymentRepository.save(paymentRequest.getPayment());
+
+        // 6. TODO: send sms
     }
 }
