@@ -9,4 +9,8 @@ public class PaymentRequest {
     public PaymentRequest(@JsonProperty("payment") Payment payment) {
         this.payment = payment;
     }
+
+    public Payment getPayment() {
+        return payment;
+    }
 }
