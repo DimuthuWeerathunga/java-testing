@@ -13,11 +13,4 @@ public class PaymentRequest {
     public Payment getPayment() {
         return payment;
     }
-
-    @Override
-    public String toString() {
-        return "PaymentRequest{" +
-                "payment=" + payment +
-                '}';
-    }
 }

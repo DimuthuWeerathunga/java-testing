@@ -13,5 +13,4 @@ public class StripeApi {
     public Charge create(Map<String, Object> requestMap, RequestOptions options) throws StripeException {
         return Charge.create(requestMap, options);
     }
-
 }

@@ -8,29 +8,28 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @DataJpaTest(
-        properties = {
-                "spring.jpa.properties.javax.persistence.validation.mode=none"
-        }
+        properties = {"spring.jpa.properties.javax.persistence.validation.mode=none"}
 )
 class PaymentRepositoryTest {
 
     @Autowired
     private PaymentRepository underTest;
 
-
     @Test
     void itShouldInsertPayment() {
         // Given
-        long paymentId = 1L;
+        long paymentId = 1l;
         Payment payment = new Payment(
-                null,
+                paymentId,
                 UUID.randomUUID(),
                 new BigDecimal("10.00"),
-                Currency.USD, "card123",
-                "Donation");
+                Currency.USD,
+                "card123", "donations"
+        );
+
         // When
         underTest.save(payment);
 
@@ -38,6 +37,8 @@ class PaymentRepositoryTest {
         Optional<Payment> paymentOptional = underTest.findById(paymentId);
         assertThat(paymentOptional)
                 .isPresent()
-                .hasValueSatisfying(p -> assertThat(p).isEqualTo(payment));
+                .hasValueSatisfying(p -> {
+                   assertThat(p).isEqualTo(payment);
+                });
     }
 }

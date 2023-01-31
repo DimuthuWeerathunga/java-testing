@@ -13,36 +13,34 @@ public class PaymentService {
     private static final List<Currency> ACCEPTED_CURRENCIES = List.of(Currency.USD, Currency.GBP);
 
     private final CustomerRepository customerRepository;
+
     private final PaymentRepository paymentRepository;
+
     private final CardPaymentCharger cardPaymentCharger;
 
     @Autowired
-    public PaymentService(CustomerRepository customerRepository,
-                          PaymentRepository paymentRepository,
-                          CardPaymentCharger cardPaymentCharger) {
+    public PaymentService(CustomerRepository customerRepository, PaymentRepository paymentRepository, CardPaymentCharger cardPaymentCharger) {
         this.customerRepository = customerRepository;
         this.paymentRepository = paymentRepository;
         this.cardPaymentCharger = cardPaymentCharger;
     }
 
     void chargeCard(UUID customerId, PaymentRequest paymentRequest) {
-        // 1. Does customer exists if not throw
+        // 1. Does customer exist if not throw
         boolean isCustomerFound = customerRepository.findById(customerId).isPresent();
         if (!isCustomerFound) {
-            throw new IllegalStateException(String.format("Customer with id [%s] not found", customerId));
+            throw new IllegalStateException(String.format("Customer with [%s] id not found", customerId));
         }
 
         // 2. Do we support the currency if not throw
-        boolean isCurrencySupported = ACCEPTED_CURRENCIES.contains(paymentRequest.getPayment().getCurrency());
-
+        boolean isCurrencySupported = ACCEPTED_CURRENCIES.stream()
+                .anyMatch(c -> c.equals(paymentRequest.getPayment().getCurrency()));
         if (!isCurrencySupported) {
-            String message = String.format(
-                    "Currency [%s] not supported",
-                    paymentRequest.getPayment().getCurrency());
+            String message = String.format("Currency [%s] not supported", paymentRequest.getPayment().getCurrency());
             throw new IllegalStateException(message);
         }
 
-        // 3. Charge card
+        // 3. Card charge
         CardPaymentCharge cardPaymentCharge = cardPaymentCharger.chargeCard(
                 paymentRequest.getPayment().getSource(),
                 paymentRequest.getPayment().getAmount(),

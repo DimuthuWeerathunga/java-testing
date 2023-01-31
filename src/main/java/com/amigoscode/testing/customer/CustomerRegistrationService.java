@@ -14,34 +14,38 @@ public class CustomerRegistrationService {
     private final PhoneNumberValidator phoneNumberValidator;
 
     @Autowired
-    public CustomerRegistrationService(CustomerRepository customerRepository,
-                                       PhoneNumberValidator phoneNumberValidator) {
+    public CustomerRegistrationService(CustomerRepository customerRepository, PhoneNumberValidator phoneNumberValidator) {
         this.customerRepository = customerRepository;
         this.phoneNumberValidator = phoneNumberValidator;
     }
 
-    public void registerNewCustomer(CustomerRegistrationRequest request) {
+    public void registerNewCustomer(CustomerRegistrationRequest request){
+        // 1. PhoneNumber is taken
+        // 2. if taken let's check if belong to same customer
+        // - 2.1 if yes return
+        // - 2.2 throws an exception
+        // 3. save customer
+
         String phoneNumber = request.getCustomer().getPhoneNumber();
 
-        if (!phoneNumberValidator.test(phoneNumber)) {
-            throw new IllegalStateException("Phone Number " + phoneNumber + " is not valid");
+        // TODO: validate that phone number is valid
+        if(!phoneNumberValidator.test(phoneNumber)){
+            throw new IllegalStateException("Phone number " + phoneNumber + " is not valid");
         }
 
-        Optional<Customer> customerOptional = customerRepository
-                .selectCustomerByPhoneNumber(phoneNumber);
-
-        if (customerOptional.isPresent()) {
+        Optional<Customer> customerOptional = customerRepository.selectCustomerByPhoneNumber(phoneNumber);
+        if(customerOptional.isPresent()){
             Customer customer = customerOptional.get();
-            if (customer.getName().equals(request.getCustomer().getName())) {
+            if(customer.getName().equals(request.getCustomer().getName())){
                 return;
             }
             throw new IllegalStateException(String.format("phone number [%s] is taken", phoneNumber));
         }
 
-        if(request.getCustomer().getId() == null) {
+        if(request.getCustomer().getId()==null){
             request.getCustomer().setId(UUID.randomUUID());
         }
 
-        customerRepository.save(request.getCustomer());
+            customerRepository.save(request.getCustomer());
     }
 }

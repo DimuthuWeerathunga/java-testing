@@ -6,7 +6,6 @@ import com.amigoscode.testing.payment.Currency;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Charge;
 import com.stripe.net.RequestOptions;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -23,20 +22,22 @@ public class StripeService implements CardPaymentCharger {
 
     private final StripeApi stripeApi;
 
-    private final static RequestOptions requestOptions = RequestOptions.builder()
+    private static final RequestOptions requestOptions = RequestOptions.builder()
             .setApiKey("sk_test_4eC39HqLyjWDarjtT1zdp7dc")
             .build();
 
-    @Autowired
     public StripeService(StripeApi stripeApi) {
         this.stripeApi = stripeApi;
     }
 
     @Override
-    public CardPaymentCharge chargeCard(String cardSource,
-                                        BigDecimal amount,
-                                        Currency currency,
-                                        String description) {
+    public CardPaymentCharge chargeCard(
+            String cardSource,
+            BigDecimal amount,
+            Currency currency,
+            String description
+    ) {
+
         Map<String, Object> params = new HashMap<>();
         params.put("amount", amount);
         params.put("currency", currency);
@@ -49,6 +50,5 @@ public class StripeService implements CardPaymentCharger {
         } catch (StripeException e) {
             throw new IllegalStateException("Cannot make stripe charge", e);
         }
-
     }
 }

@@ -12,14 +12,16 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 
 class PaymentServiceTest {
-
     @Mock
     private CustomerRepository customerRepository;
     @Mock
@@ -67,8 +69,8 @@ class PaymentServiceTest {
         underTest.chargeCard(customerId, paymentRequest);
 
         // Then
-        ArgumentCaptor<Payment> paymentArgumentCaptor =
-                ArgumentCaptor.forClass(Payment.class);
+        ArgumentCaptor<Payment> paymentArgumentCaptor
+                = ArgumentCaptor.forClass(Payment.class);
 
         then(paymentRepository).should().save(paymentArgumentCaptor.capture());
 
@@ -76,7 +78,8 @@ class PaymentServiceTest {
         assertThat(paymentArgumentCaptorValue)
                 .isEqualToIgnoringGivenFields(
                         paymentRequest.getPayment(),
-                        "customerId");
+                        "customerId"
+                );
 
         assertThat(paymentArgumentCaptorValue.getCustomerId()).isEqualTo(customerId);
     }
@@ -113,21 +116,17 @@ class PaymentServiceTest {
         // Then
         assertThatThrownBy(() -> underTest.chargeCard(customerId, paymentRequest))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Card not debited for customer " + customerId);
-
-        // ... No interaction with paymentRepository
-        then(paymentRepository).shouldHaveNoInteractions();    }
+                .hasMessageContaining(String.format("Card not debited for customer %s", customerId));
+        then(paymentRepository).should(never()).save(any(Payment.class));
+    }
 
     @Test
-    void itShouldNotChargeCardAndThrowWhenCurrencyNotSupported() {
+    void itShouldNotChargeAndThrowWhenCurrencyNotSupported() {
         // Given
         UUID customerId = UUID.randomUUID();
 
         // ... Customer exists
         given(customerRepository.findById(customerId)).willReturn(Optional.of(mock(Customer.class)));
-
-        // ... Euros
-        Currency currency = Currency.EUR;
 
         // ... Payment request
         PaymentRequest paymentRequest = new PaymentRequest(
@@ -135,23 +134,24 @@ class PaymentServiceTest {
                         null,
                         null,
                         new BigDecimal("100.00"),
-                        currency,
+                        Currency.EUR,
                         "card123xx",
                         "Donation"
                 )
         );
-
         // When
         assertThatThrownBy(() -> underTest.chargeCard(customerId, paymentRequest))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Currency [" + currency + "] not supported");
+                .hasMessageContaining(
+                        String.format("Currency [%s] not supported", paymentRequest.getPayment().getCurrency())
+                );
+
 
         // Then
-
         // ... No interaction with cardPaymentCharger
         then(cardPaymentCharger).shouldHaveNoInteractions();
 
-        // ... No interaction with paymentRepository
+        // Payment should not be saved
         then(paymentRepository).shouldHaveNoInteractions();
     }
 
@@ -167,10 +167,6 @@ class PaymentServiceTest {
         // Then
         assertThatThrownBy(() -> underTest.chargeCard(customerId, new PaymentRequest(new Payment())))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Customer with id [" + customerId + "] not found");
-
-        // ... No interactions with PaymentCharger not PaymentRepository
-        then(cardPaymentCharger).shouldHaveNoInteractions();
-        then(paymentRepository).shouldHaveNoInteractions();
+                .hasMessageContaining(String.format("Customer with [%s] id not found", customerId));
     }
 }

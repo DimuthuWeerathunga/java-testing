@@ -3,29 +3,31 @@ package com.amigoscode.testing.customer;
 import com.amigoscode.testing.utils.PhoneNumberValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 
+//@ExtendWith(MockitoExtension.class)
 class CustomerRegistrationServiceTest {
 
     @Mock
-    private CustomerRepository customerRepository;
-
+    private CustomerRepository customerRepository;// = mock(CustomerRepository.class);
     @Mock
     private PhoneNumberValidator phoneNumberValidator;
-
     @Captor
     private ArgumentCaptor<Customer> customerArgumentCaptor;
 
@@ -41,16 +43,16 @@ class CustomerRegistrationServiceTest {
     void itShouldSaveNewCustomer() {
         // Given a phone number and a customer
         String phoneNumber = "000099";
-        Customer customer = new Customer(UUID.randomUUID(), "Maryam", phoneNumber);
+        Customer customer = new Customer(UUID.randomUUID(), "Mariyam", phoneNumber);
 
-        // ... a request
+        // a request
         CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer);
 
-        // ... No customer with phone number passed
+        // no customer with phone number passed
         given(customerRepository.selectCustomerByPhoneNumber(phoneNumber))
                 .willReturn(Optional.empty());
 
-        //... Valid phone number
+        // ... Valid phone number
         given(phoneNumberValidator.test(phoneNumber)).willReturn(true);
 
         // When
@@ -59,72 +61,43 @@ class CustomerRegistrationServiceTest {
         // Then
         then(customerRepository).should().save(customerArgumentCaptor.capture());
         Customer customerArgumentCaptorValue = customerArgumentCaptor.getValue();
-        assertThat(customerArgumentCaptorValue).isEqualTo(customer);
+        assertThat(customerArgumentCaptorValue).isEqualToComparingFieldByField(customer);
     }
 
     @Test
     void itShouldNotSaveNewCustomerWhenPhoneNumberIsInvalid() {
         // Given a phone number and a customer
         String phoneNumber = "000099";
-        Customer customer = new Customer(UUID.randomUUID(), "Maryam", phoneNumber);
+        Customer customer = new Customer(UUID.randomUUID(), "Mariyam", phoneNumber);
 
-        // ... a request
+        // a request
         CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer);
 
-
-        //... Valid phone number
+        // ... Invalid phone number
         given(phoneNumberValidator.test(phoneNumber)).willReturn(false);
 
         // When
+        // Then
         assertThatThrownBy(() -> underTest.registerNewCustomer(request))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Phone Number " + phoneNumber + " is not valid");
-
-        // Then
+                .hasMessageContaining("Phone number " + phoneNumber + " is not valid");
         then(customerRepository).shouldHaveNoInteractions();
-    }
-
-    @Test
-    void itShouldSaveNewCustomerWhenIdIsNull() {
-        // Given a phone number and a customer
-        String phoneNumber = "000099";
-        Customer customer = new Customer(null, "Maryam", phoneNumber);
-
-        // ... a request
-        CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer);
-
-        // ... No customer with phone number passed
-        given(customerRepository.selectCustomerByPhoneNumber(phoneNumber))
-                .willReturn(Optional.empty());
-
-        //... Valid phone number
-        given(phoneNumberValidator.test(phoneNumber)).willReturn(true);
-
-        // When
-        underTest.registerNewCustomer(request);
-
-        // Then
-        then(customerRepository).should().save(customerArgumentCaptor.capture());
-        Customer customerArgumentCaptorValue = customerArgumentCaptor.getValue();
-        assertThat(customerArgumentCaptorValue)
-                .isEqualToIgnoringGivenFields(customer, "id");
-        assertThat(customerArgumentCaptorValue.getId()).isNotNull();
     }
 
     @Test
     void itShouldNotSaveCustomerWhenCustomerExists() {
         // Given a phone number and a customer
         String phoneNumber = "000099";
-        Customer customer = new Customer(UUID.randomUUID(), "Maryam", phoneNumber);
+        Customer customer = new Customer(UUID.randomUUID(), "Mariyam", phoneNumber);
 
-        // ... a request
+        // a request
         CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer);
 
-        // ... an existing customer is retuned
+        // an existing customer is returned
         given(customerRepository.selectCustomerByPhoneNumber(phoneNumber))
                 .willReturn(Optional.of(customer));
 
-        //... Valid phone number
+        // ... Valid phone number
         given(phoneNumberValidator.test(phoneNumber)).willReturn(true);
 
         // When
@@ -135,30 +108,56 @@ class CustomerRegistrationServiceTest {
     }
 
     @Test
+    void itShouldSaveNewCustomerWhenIdIsNull() {
+        // Given a phone number and a customer
+        String phoneNumber = "000099";
+        Customer customer = new Customer(null, "Mariyam", phoneNumber);
+
+        // a request
+        CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer);
+
+        // no customer with phone number passed
+        given(customerRepository.selectCustomerByPhoneNumber(phoneNumber))
+                .willReturn(Optional.empty());
+
+        // ... Valid phone number
+        given(phoneNumberValidator.test(phoneNumber)).willReturn(true);
+
+        // When
+        underTest.registerNewCustomer(request);
+
+        // Then
+        then(customerRepository).should().save(customerArgumentCaptor.capture());
+        Customer customerArgumentCaptorValue = customerArgumentCaptor.getValue();
+        assertThat(customerArgumentCaptorValue)
+                .isEqualToIgnoringGivenFields(customer,"id");
+        assertThat(customerArgumentCaptorValue.getId()).isNotNull();
+    }
+
+    @Test
     void itShouldThrowWhenPhoneNumberIsTaken() {
         // Given a phone number and a customer
         String phoneNumber = "000099";
-        Customer customer = new Customer(UUID.randomUUID(), "Maryam", phoneNumber);
-        Customer customerTwo = new Customer(UUID.randomUUID(), "John", phoneNumber);
+        Customer customer = new Customer(UUID.randomUUID(), "Mariyam", phoneNumber);
+        Customer customer2 = new Customer(UUID.randomUUID(), "John", phoneNumber);
 
-        // ... a request
+        // a request
         CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer);
 
-        // ... No customer with phone number passed
+        // an existing customer is returned
         given(customerRepository.selectCustomerByPhoneNumber(phoneNumber))
-                .willReturn(Optional.of(customerTwo));
+                .willReturn(Optional.of(customer2));
 
-        //... Valid phone number
+        // ... Valid phone number
         given(phoneNumberValidator.test(phoneNumber)).willReturn(true);
 
         // When
         // Then
-        assertThatThrownBy(() -> underTest.registerNewCustomer(request))
+        assertThatThrownBy(()-> underTest.registerNewCustomer(request))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining(String.format("phone number [%s] is taken", phoneNumber));
 
         // Finally
         then(customerRepository).should(never()).save(any(Customer.class));
-
     }
 }
