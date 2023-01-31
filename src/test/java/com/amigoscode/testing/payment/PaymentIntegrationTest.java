@@ -33,16 +33,13 @@ public class PaymentIntegrationTest {
     private PaymentRepository paymentRepository;
 
     @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
     private MockMvc mockMvc;
 
     @Test
     void itShouldCreatePaymentSuccessfully() throws Exception {
         // Given a customer
         UUID customerId = UUID.randomUUID();
-        Customer customer = new Customer(customerId, "James", "0000000");
+        Customer customer = new Customer(customerId, "James", "+447000000000");
 
         // Register
         CustomerRegistrationRequest customerRegistrationRequest = new CustomerRegistrationRequest(customer);
