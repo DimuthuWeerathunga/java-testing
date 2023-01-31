@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
 @Entity
-@JsonIgnoreProperties(value = {"id"}, allowGetters = true)
+//@JsonIgnoreProperties(value = {"id"}, allowGetters = true)
 public class Customer {
     @Id
     private UUID id;

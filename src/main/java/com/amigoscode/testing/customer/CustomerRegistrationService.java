@@ -37,6 +37,6 @@ public class CustomerRegistrationService {
             request.getCustomer().setId(UUID.randomUUID());
         }
 
-        customerRepository.save(request.getCustomer());
+            customerRepository.save(request.getCustomer());
     }
 }

@@ -40,16 +40,17 @@ public class PaymentIntegrationTest {
 
     @Test
     void itShouldCreatePaymentSuccessfully() throws Exception {
-        // Given
+        // Given a customer
         UUID customerId = UUID.randomUUID();
         Customer customer = new Customer(customerId, "James", "0000000");
 
+        // Register
         CustomerRegistrationRequest customerRegistrationRequest = new CustomerRegistrationRequest(customer);
         ResultActions customerRegResultActions = mockMvc.perform(put("/api/v1/customer-registration")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(Objects.requireNonNull(objectToJson(customerRegistrationRequest))));
 
-//        customerRepository.save(customer);
+        // Payment and PaymentRequest
         Payment payment = new Payment(
                 1L,
                 customerId,
@@ -59,21 +60,25 @@ public class PaymentIntegrationTest {
                 "Donations");
         PaymentRequest paymentRequest = new PaymentRequest(payment);
 
-        // When
+        // When payment is sent
         ResultActions paymentResultActions = mockMvc.perform(
                 post("/api/v1/payment")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(Objects.requireNonNull(objectToJson(paymentRequest)))
         );
 
-        // Then
+        // Then both customer registration and payment requests are 200 status code
         customerRegResultActions.andExpect(status().isOk());
         paymentResultActions.andExpect(status().isOk());
 
+        // That payment is stored in db
+        // TODO: Do not use payment repository instead create an endpoint to retrieve payments for customers
         assertThat(paymentRepository.findById(1L))
                 .isPresent()
                 .hasValueSatisfying(
                         p -> assertThat(p).isEqualToComparingFieldByField(payment));
+
+        // TODO: Ensure sms is delivered
     }
 
     private String objectToJson(Object o) {
