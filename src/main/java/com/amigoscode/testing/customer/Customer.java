@@ -1,13 +1,10 @@
 package com.amigoscode.testing.customer;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
 import java.util.UUID;
 
 @Entity
@@ -15,10 +12,10 @@ import java.util.UUID;
 public class Customer {
     @Id
     private UUID id;
-    @NotBlank
+//    @NotBlank
     @Column(nullable = false)
     private String name;
-    @NotBlank
+//    @NotBlank
     @Column(nullable = false, unique = true)
     private String phoneNumber;
 
