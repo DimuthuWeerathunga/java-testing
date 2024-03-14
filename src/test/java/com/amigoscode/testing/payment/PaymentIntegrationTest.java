@@ -73,7 +73,8 @@ public class PaymentIntegrationTest {
         assertThat(paymentRepository.findById(1L))
                 .isPresent()
                 .hasValueSatisfying(
-                        p -> assertThat(p).isEqualToComparingFieldByField(payment));
+                        p -> assertThat(p).isEqualToComparingFieldByField(payment)
+                );
 
         // TODO: Ensure sms is delivered
     }

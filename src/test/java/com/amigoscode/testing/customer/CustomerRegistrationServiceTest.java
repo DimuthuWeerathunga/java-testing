@@ -48,7 +48,7 @@ class CustomerRegistrationServiceTest {
         // a request
         CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer);
 
-        // no customer with phone number passed
+        // no existing customer with phone number passed
         given(customerRepository.selectCustomerByPhoneNumber(phoneNumber))
                 .willReturn(Optional.empty());
 

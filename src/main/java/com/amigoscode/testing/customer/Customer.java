@@ -24,7 +24,6 @@ public class Customer {
         this.name = name;
         this.phoneNumber = phoneNumber;
     }
-
     public Customer() {
     }
 
